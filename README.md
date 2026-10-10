@@ -2,7 +2,7 @@
 
 A React-based inventory management dashboard for managing users, products, purchasing, orders, and refunds. The dashboard includes sales summaries and charts, and comes with sample data so you can explore the interface locally.
 
-> **Demo only:** This project currently uses browser storage for its sample accounts and application data. It does not include a production backend or secure authentication. Do not use real customer information, passwords, or business data.
+
 
 ## Features
 
