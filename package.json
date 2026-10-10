@@ -1,7 +1,7 @@
 {
   "name": "inventory-react",
   "version": "1.0.0",
-  "description": "",
+  "description": "A React inventory management dashboard for users, products, purchasing, orders, and refunds.",
   "main": "index.js",
   "scripts": {
     "start": "webpack serve --mode development --open",
