@@ -33,9 +33,8 @@ The development server runs at [http://localhost:3000](http://localhost:3000).
 | Role | Email | Password |
 | --- | --- | --- |
 | Admin | `admin@gmail.com` | `admin123` |
-| Admin | `sarah@stockflow.com` | `admin123` |
 | User | `user@gmail.com` | `user123` |
-| Viewer | `viewer@gmail.com` | `viewer123` |
+
 
 These credentials are for local demonstration only. They are included in the client-side source and must not be treated as secure credentials.
 
