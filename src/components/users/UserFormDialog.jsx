@@ -86,7 +86,6 @@ export default function UserFormDialog({ open, onClose, onSave, initialData }) {
           >
             <option value="Admin">Admin</option>
             <option value="">Select a role</option>
-            <option value="User">User</option>
             <option value="Viewer">Viewer</option>
           </Select>
           <Select

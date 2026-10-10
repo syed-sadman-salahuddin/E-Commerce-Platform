@@ -22,7 +22,7 @@ export default function Topbar({ title, onMenuClick }) {
     navigate("/login");
   }
 
-  const role = user?.role || "User";
+  const role = user?.role || "Viewer";
 
   return (
     <header className="sticky top-0 z-30 flex h-16 items-center justify-between gap-3 border-b border-slate-200 bg-white/80 px-4 backdrop-blur-md sm:px-6 lg:pl-8">
@@ -52,9 +52,7 @@ export default function Topbar({ title, onMenuClick }) {
                 className={`rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider ${
                   role === "Admin"
                     ? "bg-purple-100 text-purple-700"
-                    : role === "Viewer"
-                    ? "bg-amber-100 text-amber-700"
-                    : "bg-blue-100 text-blue-700"
+                    : "bg-amber-100 text-amber-700"
                 }`}
               >
                 {role}

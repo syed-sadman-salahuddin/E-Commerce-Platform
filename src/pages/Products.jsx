@@ -12,8 +12,12 @@ import Pagination from "@/components/ui/Pagination";
 import Button from "@/components/ui/Button";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
+import { useAuth } from "@/context/AuthContext";
+import { normalizeRole } from "@/lib/types";
 
 export default function ProductsPage() {
+  const { user } = useAuth();
+  const isAdmin = normalizeRole(user?.role) === "Admin";
   const [products, setProducts, loaded] = useLocalStorage(
     KEYS.products,
     seedProducts
@@ -78,16 +82,19 @@ export default function ProductsPage() {
   }
 
   function openAdd() {
+    if (!isAdmin) return;
     setEditing(null);
     setFormOpen(true);
   }
 
   function openEdit(product) {
+    if (!isAdmin) return;
     setEditing(product);
     setFormOpen(true);
   }
 
   function handleSave(data) {
+    if (!isAdmin) return;
     if (editing) {
       setProducts((prev) =>
         prev.map((p) => (p.id === editing.id ? { ...p, ...data } : p))
@@ -102,7 +109,7 @@ export default function ProductsPage() {
   }
 
   function handleDelete() {
-    if (!deleteTarget) return;
+    if (!isAdmin || !deleteTarget) return;
     setProducts((prev) => prev.filter((p) => p.id !== deleteTarget.id));
     showToast(`Deleted ${deleteTarget.name}.`, "error");
     setDeleteTarget(null);
@@ -156,10 +163,12 @@ export default function ProductsPage() {
             <option value="stock-desc">Stock: high to low</option>
           </select>
         </div>
-        <Button onClick={openAdd}>
-          <Plus size={16} />
-          Add Product
-        </Button>
+        {isAdmin && (
+          <Button onClick={openAdd}>
+            <Plus size={16} />
+            Add Product
+          </Button>
+        )}
       </div>
 
       <Table>
@@ -179,12 +188,12 @@ export default function ProductsPage() {
               </span>
             </Th>
             <Th>Status</Th>
-            <Th className="text-right">Actions</Th>
+            {isAdmin && <Th className="text-right">Actions</Th>}
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
           {pageItems.length === 0 ? (
-            <EmptyRow colSpan={7} message="No products match your filters." />
+            <EmptyRow colSpan={isAdmin ? 7 : 6} message="No products match your filters." />
           ) : (
             pageItems.map((product) => (
               <tr key={product.id} className="transition hover:bg-slate-50/70">
@@ -209,24 +218,26 @@ export default function ProductsPage() {
                 <Td>
                   <StatusBadge status={product.status} />
                 </Td>
-                <Td>
-                  <div className="flex justify-end gap-1.5">
-                    <button
-                      onClick={() => openEdit(product)}
-                      aria-label={`Edit ${product.name}`}
-                      className="rounded-lg p-2 text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
-                    >
-                      <Pencil size={16} />
-                    </button>
-                    <button
-                      onClick={() => setDeleteTarget(product)}
-                      aria-label={`Delete ${product.name}`}
-                      className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
-                    >
-                      <Trash2 size={16} />
-                    </button>
-                  </div>
-                </Td>
+                {isAdmin && (
+                  <Td>
+                    <div className="flex justify-end gap-1.5">
+                      <button
+                        onClick={() => openEdit(product)}
+                        aria-label={`Edit ${product.name}`}
+                        className="rounded-lg p-2 text-slate-400 transition hover:bg-indigo-50 hover:text-indigo-600"
+                      >
+                        <Pencil size={16} />
+                      </button>
+                      <button
+                        onClick={() => setDeleteTarget(product)}
+                        aria-label={`Delete ${product.name}`}
+                        className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+                  </Td>
+                )}
               </tr>
             ))
           )}
@@ -241,20 +252,24 @@ export default function ProductsPage() {
         onPageChange={setPage}
       />
 
-      <ProductFormDialog
-        open={formOpen}
-        onClose={() => setFormOpen(false)}
-        onSave={handleSave}
-        initialData={editing}
-      />
+      {isAdmin && (
+        <>
+          <ProductFormDialog
+            open={formOpen}
+            onClose={() => setFormOpen(false)}
+            onSave={handleSave}
+            initialData={editing}
+          />
 
-      <ConfirmDialog
-        open={deleteTarget !== null}
-        onClose={() => setDeleteTarget(null)}
-        onConfirm={handleDelete}
-        title="Delete product?"
-        message={`This will permanently remove ${deleteTarget?.name ?? "this product"}. This action cannot be undone.`}
-      />
+          <ConfirmDialog
+            open={deleteTarget !== null}
+            onClose={() => setDeleteTarget(null)}
+            onConfirm={handleDelete}
+            title="Delete product?"
+            message={`This will permanently remove ${deleteTarget?.name ?? "this product"}. This action cannot be undone.`}
+          />
+        </>
+      )}
     </div>
   );
 }

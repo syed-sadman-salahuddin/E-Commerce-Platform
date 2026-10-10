@@ -1,4 +1,4 @@
-import { Check, Plus, PackageX } from "lucide-react";
+import { Check, Plus, Minus, PackageX } from "lucide-react";
 import { formatCurrency, cn } from "@/lib/utils";
 import { getProductImage } from "./productImages";
 
@@ -6,7 +6,8 @@ export default function ProductCard({
   product,
   isSelected,
   onToggleSelect,
-  disabledSelect,
+  quantity,
+  onQuantityChange,
 }) {
   const imageSrc = getProductImage(product);
   const isOutOfStock = product.stock <= 0 || product.status === "inactive";
@@ -14,6 +15,18 @@ export default function ProductCard({
   function handleClick() {
     if (isOutOfStock) return;
     onToggleSelect(product);
+  }
+
+  function updateQuantity(value) {
+    const parsed = Number.parseInt(value, 10);
+    const nextQuantity = Number.isNaN(parsed)
+      ? 1
+      : Math.max(1, Math.min(parsed, product.stock));
+    onQuantityChange(product.id, nextQuantity);
+  }
+
+  function stopCardClick(event) {
+    event.stopPropagation();
   }
 
   return (
@@ -101,7 +114,7 @@ export default function ProductCard({
 
           <button
             type="button"
-            disabled={isOutOfStock || (!isSelected && disabledSelect)}
+            disabled={isOutOfStock}
             onClick={(e) => {
               e.stopPropagation();
               handleClick();
@@ -112,8 +125,6 @@ export default function ProductCard({
                 ? "cursor-not-allowed bg-slate-100 text-slate-400"
                 : isSelected
                 ? "bg-indigo-600 text-white shadow-sm hover:bg-indigo-700"
-                : disabledSelect
-                ? "cursor-not-allowed bg-slate-100 text-slate-400"
                 : "bg-slate-100 text-slate-700 hover:bg-indigo-50 hover:text-indigo-600"
             )}
           >
@@ -130,6 +141,49 @@ export default function ProductCard({
             )}
           </button>
         </div>
+
+        {isSelected && (
+          <div
+            className="mt-3 flex items-center justify-between gap-3 border-t border-slate-100 pt-3"
+            onClick={stopCardClick}
+          >
+            <div className="flex items-center rounded-xl border border-slate-200 bg-white shadow-xs">
+              <button
+                type="button"
+                onClick={() => updateQuantity(quantity - 1)}
+                disabled={quantity <= 1}
+                className="flex h-8 w-8 items-center justify-center rounded-l-xl text-slate-500 transition hover:bg-slate-100 disabled:opacity-30"
+                aria-label={`Decrease ${product.name} quantity`}
+              >
+                <Minus size={14} />
+              </button>
+              <input
+                type="number"
+                min="1"
+                max={product.stock}
+                value={quantity}
+                onChange={(event) => updateQuantity(event.target.value)}
+                className="h-8 w-12 border-x border-slate-200 text-center text-xs font-semibold text-slate-900 outline-none"
+                aria-label={`${product.name} quantity`}
+              />
+              <button
+                type="button"
+                onClick={() => updateQuantity(quantity + 1)}
+                disabled={quantity >= product.stock}
+                className="flex h-8 w-8 items-center justify-center rounded-r-xl text-slate-500 transition hover:bg-slate-100 disabled:opacity-30"
+                aria-label={`Increase ${product.name} quantity`}
+              >
+                <Plus size={14} />
+              </button>
+            </div>
+            <div className="text-right">
+              <p className="text-xs text-slate-400">Subtotal</p>
+              <p className="text-sm font-bold text-slate-900">
+                {formatCurrency(product.price * quantity)}
+              </p>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

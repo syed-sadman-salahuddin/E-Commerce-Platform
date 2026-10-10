@@ -22,7 +22,7 @@ const DEMO_ACCOUNTS = [
     name: "Michael Chen",
     email: "user@gmail.com",
     password: "user123",
-    role: "User",
+    role: "Viewer",
   },
   {
     name: "Tom Harris",
@@ -55,14 +55,32 @@ function resolveRole(email, explicitRole) {
   );
   if (demoMatch?.role) return normalizeRole(demoMatch.role);
 
-  return "User";
+  return "Viewer";
+}
+
+function migrateStoredRoles(key, normalizeEntries) {
+  const raw = localStorage.getItem(key);
+  if (!raw) return;
+
+  const entries = JSON.parse(raw);
+  if (!Array.isArray(entries)) {
+    throw new TypeError(`Stored "${key}" data must be an array.`);
+  }
+
+  const normalized = normalizeEntries(entries);
+  if (JSON.stringify(entries) !== JSON.stringify(normalized)) {
+    localStorage.setItem(key, JSON.stringify(normalized));
+  }
 }
 
 function readAccounts() {
   try {
     const raw = localStorage.getItem(KEYS.accounts);
     if (raw) {
-      const existing = JSON.parse(raw);
+      const existing = JSON.parse(raw).map((account) => ({
+        ...account,
+        role: normalizeRole(account.role),
+      }));
       // Ensure all demo accounts are present
       let updated = false;
       const combined = [...existing];
@@ -72,7 +90,7 @@ function readAccounts() {
           updated = true;
         }
       }
-      if (updated) {
+      if (updated || JSON.stringify(existing) !== raw) {
         localStorage.setItem(KEYS.accounts, JSON.stringify(combined));
       }
       return combined;
@@ -100,7 +118,7 @@ function addToUsersList(account) {
       id: generateId("USR"),
       name: account.name,
       email: account.email,
-      role: account.role || "User",
+      role: account.role || "Viewer",
       status: "active",
       joinedAt: new Date().toISOString(),
     };
@@ -117,18 +135,36 @@ export function AuthProvider({ children }) {
 
   useEffect(() => {
     try {
+      migrateStoredRoles(KEYS.users, normalizeUsers);
+    } catch (error) {
+      console.error("Could not migrate stored user roles", error);
+    }
+
+    try {
+      migrateStoredRoles(KEYS.accounts, (accounts) =>
+        accounts.map((account) => ({ ...account, role: normalizeRole(account.role) }))
+      );
+    } catch (error) {
+      console.error("Could not migrate stored account roles", error);
+    }
+
+    try {
       const raw =
         localStorage.getItem(KEYS.session) ??
         sessionStorage.getItem(KEYS.session);
       if (raw) {
         const parsed = JSON.parse(raw);
-        if (!parsed.role) {
-          parsed.role = resolveRole(parsed.email);
-        }
+        parsed.role = parsed.role
+          ? normalizeRole(parsed.role)
+          : resolveRole(parsed.email);
         setUser(parsed);
+        const store = localStorage.getItem(KEYS.session)
+          ? localStorage
+          : sessionStorage;
+        store.setItem(KEYS.session, JSON.stringify(parsed));
       }
-    } catch {
-      // ignore storage errors
+    } catch (error) {
+      console.error("Could not load saved session", error);
     }
     setLoading(false);
   }, []);
@@ -147,7 +183,7 @@ export function AuthProvider({ children }) {
     return { ok: true };
   }
 
-  function signup(name, email, password, role = "User") {
+  function signup(name, email, password, role = "Viewer") {
     const accounts = readAccounts();
     const exists = accounts.some(
       (a) => a.email.toLowerCase() === email.trim().toLowerCase()

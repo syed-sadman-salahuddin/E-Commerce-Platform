@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Outlet, useLocation, useNavigate } from "react-router-dom";
+import { Navigate, Outlet, useLocation, useNavigate } from "react-router-dom";
 import { Loader2 } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import Sidebar from "@/components/Sidebar";
 import Topbar from "@/components/Topbar";
+import { normalizeRole } from "@/lib/types";
 
 const titles = {
   "/dashboard": "Dashboard",
@@ -13,6 +14,8 @@ const titles = {
   "/orders": "Orders",
   "/refunds": "Refunds",
 };
+
+const adminOnlyPaths = new Set(["/users", "/purchasing", "/refunds"]);
 
 export default function AppLayout() {
   const { user, loading } = useAuth();
@@ -34,6 +37,13 @@ export default function AppLayout() {
         <Loader2 className="animate-spin text-indigo-600" size={28} />
       </div>
     );
+  }
+
+  if (
+    normalizeRole(user.role) !== "Admin" &&
+    adminOnlyPaths.has(pathname)
+  ) {
+    return <Navigate to="/dashboard" replace />;
   }
 
   const title = titles[pathname] ?? "Dekko Isho Inventory";

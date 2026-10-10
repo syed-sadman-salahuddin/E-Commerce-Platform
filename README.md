@@ -9,7 +9,8 @@ A React-based inventory management dashboard for managing users, products, purch
 - Dashboard with sales metrics, sales trends, top-selling products, and recent orders
 - User and product management
 - Purchasing, order, and refund screens
-- Demo sign-in with Admin, User, and Viewer roles
+- Demo sign-in with Admin and Viewer roles
+- Customer orders can include any number of in-stock products; stock is reduced when an order is placed
 - Browser-based persistence using `localStorage`
 - Responsive interface built with Tailwind CSS
 
@@ -34,7 +35,7 @@ The development server runs at [http://localhost:3000](http://localhost:3000).
 | --- | --- | --- |
 | Admin | `admin@gmail.com` | `admin123` |
 | Admin | `sarah@stockflow.com` | `admin123` |
-| User | `user@gmail.com` | `user123` |
+| Viewer | `user@gmail.com` | `user123` |
 | Viewer | `viewer@gmail.com` | `viewer123` |
 
 These credentials are for local demonstration only. They are included in the client-side source and must not be treated as secure credentials.

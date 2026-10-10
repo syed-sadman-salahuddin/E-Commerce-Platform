@@ -22,10 +22,10 @@ export default function UserOrderDialog({
     if (open) {
       setCustomer(currentUser?.name || "");
       setShippingAddress("");
-      // Initialize each selected product with quantity 1
+      // Preserve quantities selected in the catalog.
       const initialQty = {};
       selectedProducts.forEach((p) => {
-        initialQty[p.id] = 1;
+        initialQty[p.id] = p.quantity || 1;
       });
       setQuantities(initialQty);
       setErrors({});
@@ -34,7 +34,9 @@ export default function UserOrderDialog({
 
   function handleQtyChange(productId, newQty, maxStock) {
     const parsed = parseInt(newQty, 10);
-    const validQty = isNaN(parsed) ? 1 : Math.max(1, Math.min(parsed, maxStock || 999));
+    const validQty = Number.isNaN(parsed)
+      ? 1
+      : Math.max(1, Math.min(parsed, maxStock));
     setQuantities((prev) => ({
       ...prev,
       [productId]: validQty,
@@ -43,7 +45,7 @@ export default function UserOrderDialog({
 
   function handleIncrement(productId, maxStock) {
     const current = quantities[productId] || 1;
-    if (current < (maxStock || 999)) {
+    if (current < maxStock) {
       handleQtyChange(productId, current + 1, maxStock);
     }
   }
@@ -81,6 +83,17 @@ export default function UserOrderDialog({
     }
     if (activeItems.length === 0) {
       errs.items = "You must have at least one product selected to place an order.";
+    } else if (
+      activeItems.some((product) => {
+        const quantity = quantities[product.id];
+        return (
+          !Number.isInteger(quantity) ||
+          quantity < 1 ||
+          quantity > product.stock
+        );
+      })
+    ) {
+      errs.items = "Each product quantity must be within the available stock.";
     }
     return errs;
   }

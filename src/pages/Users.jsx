@@ -15,7 +15,7 @@ import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import UserFormDialog from "@/components/users/UserFormDialog";
 import { useAuth } from "@/context/AuthContext";
 
-const ROLES = ["All", "Admin", "User", "Viewer"];
+const ROLES = ["All", "Admin", "Viewer"];
 
 export default function UsersPage() {
   const { user: currentUser } = useAuth();

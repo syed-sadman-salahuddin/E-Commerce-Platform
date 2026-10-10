@@ -19,17 +19,17 @@ export const CUSTOMERS = [
 
 export const seedUsers = [
   { id: "USR-001", name: "Sarah Johnson", email: "sarah@stockflow.com", role: "Admin", status: "active", joinedAt: daysAgo(400) },
-  { id: "USR-002", name: "Michael Chen", email: "michael@stockflow.com", role: "User", status: "active", joinedAt: daysAgo(320) },
-  { id: "USR-003", name: "Priya Sharma", email: "priya@stockflow.com", role: "User", status: "active", joinedAt: daysAgo(280) },
-  { id: "USR-004", name: "David Miller", email: "david@stockflow.com", role: "User", status: "inactive", joinedAt: daysAgo(250) },
-  { id: "USR-005", name: "Aisha Rahman", email: "aisha@stockflow.com", role: "User", status: "active", joinedAt: daysAgo(210) },
+  { id: "USR-002", name: "Michael Chen", email: "michael@stockflow.com", role: "Viewer", status: "active", joinedAt: daysAgo(320) },
+  { id: "USR-003", name: "Priya Sharma", email: "priya@stockflow.com", role: "Viewer", status: "active", joinedAt: daysAgo(280) },
+  { id: "USR-004", name: "David Miller", email: "david@stockflow.com", role: "Viewer", status: "inactive", joinedAt: daysAgo(250) },
+  { id: "USR-005", name: "Aisha Rahman", email: "aisha@stockflow.com", role: "Viewer", status: "active", joinedAt: daysAgo(210) },
   { id: "USR-006", name: "Tom Harris", email: "tom@stockflow.com", role: "Viewer", status: "active", joinedAt: daysAgo(180) },
-  { id: "USR-007", name: "Grace Kim", email: "grace@stockflow.com", role: "User", status: "active", joinedAt: daysAgo(150) },
+  { id: "USR-007", name: "Grace Kim", email: "grace@stockflow.com", role: "Viewer", status: "active", joinedAt: daysAgo(150) },
   { id: "USR-008", name: "Omar Farooq", email: "omar@stockflow.com", role: "Viewer", status: "inactive", joinedAt: daysAgo(120) },
-  { id: "USR-009", name: "Lucy Adams", email: "lucy@stockflow.com", role: "User", status: "active", joinedAt: daysAgo(90) },
-  { id: "USR-010", name: "Daniel Lopez", email: "daniel@stockflow.com", role: "User", status: "active", joinedAt: daysAgo(60) },
+  { id: "USR-009", name: "Lucy Adams", email: "lucy@stockflow.com", role: "Viewer", status: "active", joinedAt: daysAgo(90) },
+  { id: "USR-010", name: "Daniel Lopez", email: "daniel@stockflow.com", role: "Viewer", status: "active", joinedAt: daysAgo(60) },
   { id: "USR-011", name: "Hannah Scott", email: "hannah@stockflow.com", role: "Viewer", status: "active", joinedAt: daysAgo(30) },
-  { id: "USR-012", name: "Ryan Cooper", email: "ryan@stockflow.com", role: "User", status: "inactive", joinedAt: daysAgo(10) },
+  { id: "USR-012", name: "Ryan Cooper", email: "ryan@stockflow.com", role: "Viewer", status: "inactive", joinedAt: daysAgo(10) },
 ];
 
 export const seedProducts = [

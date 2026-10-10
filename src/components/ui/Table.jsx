@@ -1,9 +1,9 @@
 import { cn } from "@/lib/utils";
 
-export function Table({ children }) {
+export function Table({ children, className }) {
   return (
     <div className="overflow-x-auto rounded-2xl border border-slate-200 bg-white shadow-sm">
-      <table className="w-full text-left text-sm">{children}</table>
+      <table className={cn("w-full text-left text-sm", className)}>{children}</table>
     </div>
   );
 }

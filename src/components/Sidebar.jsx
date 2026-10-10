@@ -10,18 +10,23 @@ import {
   X,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/context/AuthContext";
+import { normalizeRole } from "@/lib/types";
 
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-  { href: "/users", label: "Users", icon: Users },
+  { href: "/users", label: "Users", icon: Users, adminOnly: true },
   { href: "/products", label: "Products", icon: Package },
-  { href: "/purchasing", label: "Purchasing", icon: ClipboardList },
+  { href: "/purchasing", label: "Purchasing", icon: ClipboardList, adminOnly: true },
   { href: "/orders", label: "Orders", icon: ShoppingCart },
-  { href: "/refunds", label: "Refunds", icon: Undo2 },
+  { href: "/refunds", label: "Refunds", icon: Undo2, adminOnly: true },
 ];
 
 export default function Sidebar({ mobileOpen, onMobileClose }) {
   const { pathname } = useLocation();
+  const { user } = useAuth();
+  const isAdmin = normalizeRole(user?.role) === "Admin";
+  const visibleLinks = links.filter(({ adminOnly }) => !adminOnly || isAdmin);
 
   const content = (
     <>
@@ -46,7 +51,7 @@ export default function Sidebar({ mobileOpen, onMobileClose }) {
       </div>
 
       <nav className="flex-1 space-y-1 overflow-y-auto px-3 py-4">
-        {links.map(({ href, label, icon: Icon }) => {
+        {visibleLinks.map(({ href, label, icon: Icon }) => {
           const active = pathname === href || pathname.startsWith(href + "/");
           return (
             <Link

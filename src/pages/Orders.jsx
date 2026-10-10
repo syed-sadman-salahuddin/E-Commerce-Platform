@@ -18,18 +18,18 @@ import UserCartBanner from "@/components/orders/UserCartBanner";
 import UserOrderDialog from "@/components/orders/UserOrderDialog";
 
 const STATUSES = ["All", "Processing", "Delivered", "Cancelled"];
-const MAX_CART_ITEMS = 5;
+const ORDER_SUMMARY_ITEMS = 5;
 
 function summarizeItems(items) {
   if (!items || items.length === 0) return "-";
-  const names = items.slice(0, MAX_CART_ITEMS).map((item) => item.name);
+  const names = items.slice(0, ORDER_SUMMARY_ITEMS).map((item) => item.name);
   const remaining = items.length - names.length;
   return remaining > 0 ? `${names.join(", ")} +${remaining} more` : names.join(", ");
 }
 
 export default function OrdersPage() {
   const { user } = useAuth();
-  const userRole = normalizeRole(user?.role || "User");
+  const userRole = normalizeRole(user?.role || "Viewer");
   const isAdmin = userRole === "Admin";
 
   const [storedOrders, setOrders, loaded] = useLocalStorage(
@@ -38,15 +38,16 @@ export default function OrdersPage() {
   );
   const orders = useMemo(() => normalizeOrders(storedOrders), [storedOrders]);
   const { showToast } = useToast();
-  const [products] = useLocalStorage(KEYS.products, seedProducts);
+  const [products, setProducts] = useLocalStorage(KEYS.products, seedProducts);
 
   // Admin orders list state
   const [status, setStatus] = useState("All");
   const [adminFormOpen, setAdminFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
-  // User / Viewer catalog state
+  // Viewer catalog state
   const [selectedProductIds, setSelectedProductIds] = useState([]);
+  const [selectedQuantities, setSelectedQuantities] = useState({});
   const [userOrderFormOpen, setUserOrderFormOpen] = useState(false);
   const [catalogSearch, setCatalogSearch] = useState("");
   const [catalogCategory, setCatalogCategory] = useState("All");
@@ -67,7 +68,7 @@ export default function OrdersPage() {
   const { page, setPage, totalPages, pageItems, totalItems, pageSize } =
     usePagination(filteredOrders, 10);
 
-  // User/Viewer: Filtered products for card catalog
+  // Viewer: Filtered products for card catalog
   const filteredProducts = useMemo(() => {
     const q = catalogSearch.trim().toLowerCase();
     return products.filter((p) => {
@@ -83,31 +84,48 @@ export default function OrdersPage() {
   }, [products, catalogSearch, catalogCategory]);
 
   const selectedProducts = useMemo(() => {
-    return products.filter((p) => selectedProductIds.includes(p.id));
-  }, [products, selectedProductIds]);
+    return products
+      .filter((p) => selectedProductIds.includes(p.id))
+      .map((product) => ({
+        ...product,
+        quantity: selectedQuantities[product.id] || 1,
+      }));
+  }, [products, selectedProductIds, selectedQuantities]);
 
-  // Toggle selection on product cards (enforcing max 5 limit)
+  // Toggle selection for any in-stock product.
   function handleToggleProduct(product) {
     if (selectedProductIds.includes(product.id)) {
       setSelectedProductIds((prev) => prev.filter((id) => id !== product.id));
+      setSelectedQuantities((prev) => {
+        const next = { ...prev };
+        delete next[product.id];
+        return next;
+      });
     } else {
-      if (selectedProductIds.length >= MAX_CART_ITEMS) {
-        showToast(
-          `You can select at most ${MAX_CART_ITEMS} products at a time.`,
-          "error"
-        );
+      if (product.stock <= 0 || product.status === "inactive") {
         return;
       }
       setSelectedProductIds((prev) => [...prev, product.id]);
+      setSelectedQuantities((prev) => ({ ...prev, [product.id]: 1 }));
     }
   }
 
   function handleRemoveProduct(productId) {
     setSelectedProductIds((prev) => prev.filter((id) => id !== productId));
+    setSelectedQuantities((prev) => {
+      const next = { ...prev };
+      delete next[productId];
+      return next;
+    });
+  }
+
+  function handleQuantityChange(productId, quantity) {
+    setSelectedQuantities((prev) => ({ ...prev, [productId]: quantity }));
   }
 
   function handleClearSelection() {
     setSelectedProductIds([]);
+    setSelectedQuantities({});
   }
 
   // Admin order save
@@ -122,16 +140,51 @@ export default function OrdersPage() {
     setAdminFormOpen(false);
   }
 
-  // Customer (User / Viewer) order save
+  // Customer order save
   function handleUserOrderSave(data) {
+    const orderItems = data.items.map((item) => {
+      const product = products.find((available) => available.id === item.productId);
+      if (
+        !product ||
+        product.status === "inactive" ||
+        !Number.isInteger(item.quantity) ||
+        item.quantity < 1 ||
+        item.quantity > product.stock
+      ) {
+        return null;
+      }
+      return {
+        productId: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: item.quantity,
+      };
+    });
+
+    if (orderItems.some((item) => item === null)) {
+      showToast("Some selected products no longer have enough stock.", "error");
+      return;
+    }
+
     const newOrder = {
       ...data,
+      items: orderItems,
+      total: orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
       id: generateId("ORD"),
       createdAt: new Date().toISOString(),
     };
+    setProducts((prev) =>
+      prev.map((product) => {
+        const orderedItem = orderItems.find((item) => item.productId === product.id);
+        return orderedItem
+          ? { ...product, stock: product.stock - orderedItem.quantity }
+          : product;
+      })
+    );
     setOrders((prev) => [newOrder, ...prev]);
     showToast(`Order ${newOrder.id} created successfully!`);
     setSelectedProductIds([]);
+    setSelectedQuantities({});
     setUserOrderFormOpen(false);
   }
 
@@ -170,16 +223,16 @@ export default function OrdersPage() {
           </Button>
         </div>
 
-        <Table>
+        <Table className="min-w-[1100px] table-fixed">
           <thead>
             <tr>
-              <Th>Order ID</Th>
-              <Th>Customer</Th>
-              <Th>Products</Th>
-              <Th>Total Amount</Th>
-              <Th>Status</Th>
-              <Th>Order Date</Th>
-              <Th className="text-right">Actions</Th>
+              <Th className="w-[15%]">Order ID</Th>
+              <Th className="w-[13%]">Customer</Th>
+              <Th className="w-[26%]">Products</Th>
+              <Th className="w-[13%]">Total Amount</Th>
+              <Th className="w-[13%]">Status</Th>
+              <Th className="w-[13%]">Order Date</Th>
+              <Th className="w-[7%] text-right">Actions</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
@@ -188,10 +241,16 @@ export default function OrdersPage() {
             ) : (
               pageItems.map((order) => (
                 <tr key={order.id} className="transition hover:bg-slate-50/70">
-                  <Td className="font-medium text-slate-900">{order.id}</Td>
-                  <Td>{order.customer}</Td>
-                  <Td className="max-w-56 text-slate-500">
-                    {summarizeItems(order.items)}
+                  <Td className="font-medium text-slate-900">
+                    <div className="whitespace-normal break-all">{order.id}</div>
+                  </Td>
+                  <Td>
+                    <div className="whitespace-normal break-words">{order.customer}</div>
+                  </Td>
+                  <Td className="text-slate-500">
+                    <div className="whitespace-normal break-words">
+                      {summarizeItems(order.items)}
+                    </div>
                   </Td>
                   <Td className="font-medium">{formatCurrency(order.total)}</Td>
                   <Td>
@@ -241,7 +300,7 @@ export default function OrdersPage() {
     );
   }
 
-  // 2. USER / VIEWER VIEW: Product Catalog Cards section only (Order Table is not visible)
+  // 2. VIEWER VIEW: Product catalog only (the order table is not visible)
   return (
     <div className="space-y-6 pb-24">
       {/* Search and Category Filter Controls */}
@@ -283,7 +342,7 @@ export default function OrdersPage() {
         {/* Selection info & Add to Cart button */}
         <div className="flex items-center gap-3">
           <span className="text-xs font-medium text-slate-500">
-            {selectedProductIds.length} of {MAX_CART_ITEMS} selected
+            {selectedProductIds.length} products selected
           </span>
 
           {selectedProductIds.length > 0 && (
@@ -314,10 +373,8 @@ export default function OrdersPage() {
               product={product}
               isSelected={selectedProductIds.includes(product.id)}
               onToggleSelect={handleToggleProduct}
-              disabledSelect={
-                selectedProductIds.length >= MAX_CART_ITEMS &&
-                !selectedProductIds.includes(product.id)
-              }
+              quantity={selectedQuantities[product.id] || 1}
+              onQuantityChange={handleQuantityChange}
             />
           ))}
         </div>
@@ -330,7 +387,6 @@ export default function OrdersPage() {
           onRemoveProduct={handleRemoveProduct}
           onClear={handleClearSelection}
           onProceed={() => setUserOrderFormOpen(true)}
-          maxLimit={MAX_CART_ITEMS}
         />
       )}
 

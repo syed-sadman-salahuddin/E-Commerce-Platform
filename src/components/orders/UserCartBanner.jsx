@@ -8,11 +8,13 @@ export default function UserCartBanner({
   onRemoveProduct,
   onClear,
   onProceed,
-  maxLimit = 5,
 }) {
   if (selectedProducts.length === 0) return null;
 
-  const estimatedTotal = selectedProducts.reduce((sum, p) => sum + p.price, 0);
+  const estimatedTotal = selectedProducts.reduce(
+    (sum, p) => sum + p.price * (p.quantity || 1),
+    0
+  );
 
   return (
     <div className="fixed bottom-4 left-4 right-4 z-40 mx-auto max-w-4xl lg:left-72">
@@ -26,18 +28,14 @@ export default function UserCartBanner({
           <div>
             <div className="flex items-center gap-2">
               <span className="text-sm font-semibold text-white">
-                {selectedProducts.length} of {maxLimit} products selected
-              </span>
-              <span className="rounded-full bg-indigo-500/30 px-2 py-0.5 text-[10px] font-bold text-indigo-200">
-                Max 5
+                {selectedProducts.length} products selected
               </span>
             </div>
             <p className="text-xs text-slate-300">
               Est. Subtotal:{" "}
               <span className="font-semibold text-emerald-400">
                 {formatCurrency(estimatedTotal)}
-              </span>{" "}
-              (Qty 1 each)
+              </span>
             </p>
           </div>
 
