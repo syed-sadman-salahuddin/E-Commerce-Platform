@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { Plus, Trash2, ShoppingCart, Search, Filter } from "lucide-react";
+import { Plus, Trash2, ShoppingCart, Search, Filter, X } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { usePagination } from "@/hooks/usePagination";
 import { KEYS, seedOrders, seedProducts, CATEGORIES } from "@/lib/seed";
@@ -17,7 +17,7 @@ import ProductCard from "@/components/orders/ProductCard";
 import UserCartBanner from "@/components/orders/UserCartBanner";
 import UserOrderDialog from "@/components/orders/UserOrderDialog";
 
-const STATUSES = ["All", "Processing", "Delivered", "Cancelled"];
+const STATUSES = ["All", "Processing", "Shipped", "Completed", "Cancelled"];
 const ORDER_SUMMARY_ITEMS = 5;
 
 function summarizeItems(items) {
@@ -44,6 +44,7 @@ export default function OrdersPage() {
   const [status, setStatus] = useState("All");
   const [adminFormOpen, setAdminFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
 
   // Viewer catalog state
   const [selectedProductIds, setSelectedProductIds] = useState([]);
@@ -132,6 +133,7 @@ export default function OrdersPage() {
   function handleAdminSave(data) {
     const newOrder = {
       ...data,
+      status: "Processing",
       id: generateId("ORD"),
       createdAt: new Date().toISOString(),
     };
@@ -170,6 +172,7 @@ export default function OrdersPage() {
       ...data,
       items: orderItems,
       total: orderItems.reduce((sum, item) => sum + item.price * item.quantity, 0),
+      status: "Processing",
       id: generateId("ORD"),
       createdAt: new Date().toISOString(),
     };
@@ -193,6 +196,49 @@ export default function OrdersPage() {
     setOrders((prev) => prev.filter((o) => o.id !== deleteTarget.id));
     showToast(`Deleted order ${deleteTarget.id}.`, "error");
     setDeleteTarget(null);
+  }
+
+  function handleAdvanceOrder(order) {
+    const { id: orderId, status: currentStatus } = order;
+    const nextStatus =
+      currentStatus === "Processing"
+        ? "Shipped"
+        : currentStatus === "Shipped"
+          ? "Completed"
+          : null;
+    if (!nextStatus) return;
+
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId && order.status === currentStatus
+          ? { ...order, status: nextStatus }
+          : order
+      )
+    );
+    showToast(
+      nextStatus === "Shipped"
+        ? `Order ${orderId} marked as shipped.`
+        : `Order ${orderId} marked as completed.`
+    );
+  }
+
+  function handleCancelOrder() {
+    if (
+      !cancelTarget ||
+      (cancelTarget.status !== "Processing" && cancelTarget.status !== "Shipped")
+    ) {
+      return;
+    }
+    const { id: orderId, status: currentStatus } = cancelTarget;
+    setOrders((prev) =>
+      prev.map((order) =>
+        order.id === orderId && order.status === currentStatus
+          ? { ...order, status: "Cancelled" }
+          : order
+      )
+    );
+    showToast(`Order ${orderId} cancelled.`, "error");
+    setCancelTarget(null);
   }
 
   if (!loaded) return null;
@@ -223,21 +269,23 @@ export default function OrdersPage() {
           </Button>
         </div>
 
-        <Table className="min-w-[1100px] table-fixed">
+        <Table className="min-w-[1360px] table-fixed">
           <thead>
             <tr>
-              <Th className="w-[15%]">Order ID</Th>
-              <Th className="w-[13%]">Customer</Th>
-              <Th className="w-[26%]">Products</Th>
-              <Th className="w-[13%]">Total Amount</Th>
-              <Th className="w-[13%]">Status</Th>
-              <Th className="w-[13%]">Order Date</Th>
+              <Th className="w-[13%]">Order ID</Th>
+              <Th className="w-[11%]">Customer</Th>
+              <Th className="w-[22%]">Products</Th>
+              <Th className="w-[11%]">Total Amount</Th>
+              <Th className="w-[11%]">Status</Th>
+              <Th className="w-[11%]">Order Date</Th>
+              <Th className="w-[8%]">Activity</Th>
+              <Th className="w-[6%] text-center">Issue</Th>
               <Th className="w-[7%] text-right">Actions</Th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {pageItems.length === 0 ? (
-              <EmptyRow colSpan={7} message="No orders match this filter." />
+              <EmptyRow colSpan={9} message="No orders match this filter." />
             ) : (
               pageItems.map((order) => (
                 <tr key={order.id} className="transition hover:bg-slate-50/70">
@@ -257,6 +305,34 @@ export default function OrdersPage() {
                     <StatusBadge status={order.status} />
                   </Td>
                   <Td className="text-slate-500">{formatDate(order.createdAt)}</Td>
+                  <Td>
+                    <Button
+                      size="sm"
+                      disabled={order.status !== "Processing" && order.status !== "Shipped"}
+                      onClick={() => handleAdvanceOrder(order)}
+                      aria-label={`Advance order ${order.id} from ${order.status}`}
+                    >
+                      {order.status === "Processing"
+                        ? "Ready to ship"
+                        : order.status === "Shipped"
+                          ? "Delivered"
+                          : order.status}
+                    </Button>
+                  </Td>
+                  <Td>
+                    <div className="flex justify-center">
+                      <button
+                        type="button"
+                        disabled={order.status === "Completed" || order.status === "Cancelled"}
+                        onClick={() => setCancelTarget(order)}
+                        aria-label={`Cancel order ${order.id}`}
+                        title={`Cancel order ${order.id}`}
+                        className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  </Td>
                   <Td>
                     <div className="flex justify-end">
                       <button
@@ -295,6 +371,15 @@ export default function OrdersPage() {
           onConfirm={handleDelete}
           title="Delete order?"
           message={`This will permanently remove order ${deleteTarget?.id ?? ""}. This action cannot be undone.`}
+        />
+
+        <ConfirmDialog
+          open={cancelTarget !== null}
+          onClose={() => setCancelTarget(null)}
+          onConfirm={handleCancelOrder}
+          title="Cancel order?"
+          message="Are you sure you want to cancel this order?"
+          confirmLabel="Cancel order"
         />
       </div>
     );

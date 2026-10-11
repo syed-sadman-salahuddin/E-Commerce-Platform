@@ -75,6 +75,8 @@ export const seedOrders = [
   order("ORD-1010", "Liam Carter", [item("PRD-007", 1), item("PRD-005", 1)], "Processing", 1, "88 Oak Ave, Denver, CO"),
   order("ORD-1011", "Emma Wilson", [item("PRD-001", 5), item("PRD-010", 4)], "Processing", 0, "5 Pine Rd, Seattle, WA"),
   order("ORD-1012", "Noah Turner", [item("PRD-008", 1), item("PRD-011", 1)], "Processing", 0, "41 Lake Dr, Chicago, IL"),
+  order("ORD-1013", "Michael Chen", [item("PRD-001", 1), item("PRD-005", 1)], "Processing", 2, "45 Market St, San Francisco, CA"),
+  order("ORD-1014", "Michael Chen", [item("PRD-002", 1)], "Delivered", 4, "45 Market St, San Francisco, CA"),
 ];
 
 export const seedPurchases = [

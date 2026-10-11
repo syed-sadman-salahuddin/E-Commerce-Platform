@@ -29,6 +29,8 @@ export default function ProductCard({
     event.stopPropagation();
   }
 
+  
+
   return (
     <div
       onClick={handleClick}

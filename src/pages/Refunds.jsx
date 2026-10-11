@@ -51,6 +51,13 @@ export default function RefundsPage() {
     setDeleteTarget(null);
   }
 
+  function handleStatusChange(refundId, newStatus) {
+    setRefunds((prev) =>
+      prev.map((r) => (r.id === refundId ? { ...r, status: newStatus } : r))
+    );
+    showToast(`Refund ${refundId} marked as ${newStatus}.`);
+  }
+
   if (!loaded) return null;
 
   return (
@@ -105,7 +112,34 @@ export default function RefundsPage() {
                 </Td>
                 <Td className="text-slate-500">{formatDate(refund.requestedAt)}</Td>
                 <Td>
-                  <div className="flex justify-end">
+                  <div className="flex items-center justify-end gap-1.5">
+                    {refund.status === "Requested" && (
+                      <>
+                        <button
+                          onClick={() => handleStatusChange(refund.id, "Approved")}
+                          className="rounded-lg px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50 transition"
+                          title="Approve refund"
+                        >
+                          Approve
+                        </button>
+                        <button
+                          onClick={() => handleStatusChange(refund.id, "Rejected")}
+                          className="rounded-lg px-2 py-1 text-xs font-semibold text-rose-700 hover:bg-rose-50 transition"
+                          title="Reject refund"
+                        >
+                          Reject
+                        </button>
+                      </>
+                    )}
+                    {refund.status === "Approved" && (
+                      <button
+                        onClick={() => handleStatusChange(refund.id, "Completed")}
+                        className="rounded-lg px-2 py-1 text-xs font-semibold text-indigo-700 hover:bg-indigo-50 transition"
+                        title="Complete refund"
+                      >
+                        Complete
+                      </button>
+                    )}
                     <button
                       onClick={() => setDeleteTarget(refund)}
                       aria-label={`Delete refund ${refund.id}`}

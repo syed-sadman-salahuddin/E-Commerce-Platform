@@ -1,12 +1,11 @@
 import { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
-import { Input, Select, Textarea } from "@/components/ui/Field";
+import { Input, Textarea } from "@/components/ui/Field";
 import { cn, formatCurrency } from "@/lib/utils";
 
 const blankValues = {
   customer: "",
-  status: "Processing",
   shippingAddress: "",
 };
 
@@ -86,7 +85,7 @@ export default function OrderFormDialog({ open, onClose, onSave, products }) {
       customer: values.customer,
       items,
       total: orderTotal,
-      status: values.status,
+      status: "Processing",
       shippingAddress: values.shippingAddress,
     });
   }
@@ -100,27 +99,15 @@ export default function OrderFormDialog({ open, onClose, onSave, products }) {
       size="xl"
     >
       <form onSubmit={handleSubmit} noValidate className="space-y-4">
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Customer"
-            required
-            name="customer"
-            placeholder="Customer name"
-            value={values.customer}
-            error={errors.customer}
-            onChange={(e) => setField("customer", e.target.value)}
-          />
-          <Select
-            label="Status"
-            name="status"
-            value={values.status}
-            onChange={(e) => setField("status", e.target.value)}
-          >
-            <option value="Processing">Processing</option>
-            <option value="Delivered">Delivered</option>
-            <option value="Cancelled">Cancelled</option>
-          </Select>
-        </div>
+        <Input
+          label="Customer"
+          required
+          name="customer"
+          placeholder="Customer name"
+          value={values.customer}
+          error={errors.customer}
+          onChange={(e) => setField("customer", e.target.value)}
+        />
 
         <Textarea
           label="Shipping Address"

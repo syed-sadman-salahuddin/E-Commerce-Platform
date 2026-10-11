@@ -5,8 +5,8 @@ import { Input, Select, Textarea } from "@/components/ui/Field";
 import { formatCurrency } from "@/lib/utils";
 
 export default function RefundFormDialog({ open, onClose, onSave, orders }) {
-  const deliveredOrders = useMemo(
-    () => orders.filter((order) => order.status === "Delivered"),
+  const completedOrders = useMemo(
+    () => orders.filter((order) => order.status === "Completed"),
     [orders]
   );
 
@@ -27,7 +27,7 @@ export default function RefundFormDialog({ open, onClose, onSave, orders }) {
     }
   }, [open]);
 
-  const selectedOrder = deliveredOrders.find((o) => o.id === values.orderId) ?? null;
+  const selectedOrder = completedOrders.find((o) => o.id === values.orderId) ?? null;
 
   function setField(field, value) {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -35,7 +35,7 @@ export default function RefundFormDialog({ open, onClose, onSave, orders }) {
   }
 
   function handleOrderChange(orderId) {
-    const order = deliveredOrders.find((o) => o.id === orderId);
+    const order = completedOrders.find((o) => o.id === orderId);
     setValues((prev) => ({
       ...prev,
       orderId,
@@ -46,7 +46,7 @@ export default function RefundFormDialog({ open, onClose, onSave, orders }) {
 
   function validate() {
     const e = {};
-    if (!values.orderId || !selectedOrder) e.orderId = "Select a delivered order.";
+    if (!values.orderId || !selectedOrder) e.orderId = "Select a completed order.";
     const amount = Number(values.amount);
     if (!values.amount || Number.isNaN(amount) || amount <= 0) {
       e.amount = "Enter a valid refund amount.";
@@ -78,9 +78,9 @@ export default function RefundFormDialog({ open, onClose, onSave, orders }) {
       description="Look up an order and record a refund against it."
       size="lg"
     >
-      {deliveredOrders.length === 0 ? (
+      {completedOrders.length === 0 ? (
         <p className="py-6 text-center text-sm text-slate-500">
-          There are no delivered orders yet, so a refund can&apos;t be created.
+          There are no completed orders yet, so a refund can&apos;t be created.
         </p>
       ) : (
         <form onSubmit={handleSubmit} noValidate className="space-y-4">
@@ -88,14 +88,14 @@ export default function RefundFormDialog({ open, onClose, onSave, orders }) {
             label="Order number"
             name="orderId"
             required
-            list="delivered-order-numbers"
+            list="completed-order-numbers"
             placeholder="Search order number..."
             value={values.orderId}
             error={errors.orderId}
             onChange={(e) => handleOrderChange(e.target.value)}
           />
-          <datalist id="delivered-order-numbers">
-            {deliveredOrders.map((order) => (
+          <datalist id="completed-order-numbers">
+            {completedOrders.map((order) => (
               <option
                 key={order.id}
                 value={order.id}

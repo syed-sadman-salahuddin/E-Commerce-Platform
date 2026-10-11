@@ -8,8 +8,10 @@ export function normalizeUsers(users) {
 }
 
 export function normalizeOrderStatus(status) {
-  if (status === "Cancelled") return "Cancelled";
-  if (status === "Delivered" || status === "Shipped") return "Delivered";
+  if (status === "Cancelled" || status === "Shipped" || status === "Completed") {
+    return status;
+  }
+  if (status === "Delivered") return "Completed";
   return "Processing";
 }
 

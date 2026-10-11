@@ -22,13 +22,22 @@ import { formatCurrency, formatDate } from "@/lib/utils";
 import { Table, Th, Td, EmptyRow } from "@/components/ui/Table";
 import { StatusBadge } from "@/components/ui/Badge";
 import StatCard from "@/components/StatCard";
-import { normalizeUsers } from "@/lib/types";
+import { useAuth } from "@/context/AuthContext";
+import { normalizeRole, normalizeUsers } from "@/lib/types";
+import UserDashboard from "@/components/dashboard/UserDashboard";
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const isAdmin = normalizeRole(user?.role) === "Admin";
+
   const [storedUsers] = useLocalStorage(KEYS.users, seedUsers);
   const users = normalizeUsers(storedUsers);
   const [products] = useLocalStorage(KEYS.products, seedProducts);
   const [orders] = useLocalStorage(KEYS.orders, seedOrders);
+
+  if (!isAdmin) {
+    return <UserDashboard />;
+  }
 
   const revenue = getTotalRevenue(orders);
   const salesData = getSalesLast7Days(orders);
