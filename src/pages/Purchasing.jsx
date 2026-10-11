@@ -2,7 +2,7 @@ import { useMemo, useState } from "react";
 import { Plus, Trash2 } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { usePagination } from "@/hooks/usePagination";
-import { KEYS, seedPurchases, seedProducts } from "@/lib/seed";
+import { KEYS, seedPurchases, seedProducts, seedSuppliers } from "@/lib/seed";
 import { formatCurrency, formatDate, generateId } from "@/lib/utils";
 import { Table, Th, Td, EmptyRow } from "@/components/ui/Table";
 import { StatusBadge } from "@/components/ui/Badge";
@@ -10,6 +10,7 @@ import Pagination from "@/components/ui/Pagination";
 import Button from "@/components/ui/Button";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import PurchaseFormDialog from "@/components/purchasing/PurchaseFormDialog";
+import SupplierFormDialog from "@/components/purchasing/SupplierFormDialog";
 import { useToast } from "@/context/ToastContext";
 
 const STATUSES = ["All", "Pending", "Ordered", "Received", "Cancelled"];
@@ -21,12 +22,17 @@ export default function PurchasingPage() {
   );
   const { showToast } = useToast();
   const [products] = useLocalStorage(KEYS.products, seedProducts);
+  const [suppliers, setSuppliers, suppliersLoaded] = useLocalStorage(
+    KEYS.suppliers,
+    seedSuppliers
+  );
 
   const [status, setStatus] = useState("All");
   const [dateFrom, setDateFrom] = useState("");
   const [dateTo, setDateTo] = useState("");
 
   const [formOpen, setFormOpen] = useState(false);
+  const [supplierFormOpen, setSupplierFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
   const filtered = useMemo(() => {
@@ -51,6 +57,13 @@ export default function PurchasingPage() {
     setFormOpen(false);
   }
 
+  function handleSaveSupplier(data) {
+    const newSupplier = { ...data, id: generateId("SUP") };
+    setSuppliers((prev) => [...prev, newSupplier]);
+    showToast("Supplier added successfully.");
+    setSupplierFormOpen(false);
+  }
+
   function handleDelete() {
     if (!deleteTarget) return;
     setPurchases((prev) => prev.filter((p) => p.id !== deleteTarget.id));
@@ -65,7 +78,7 @@ export default function PurchasingPage() {
     setPage(1);
   }
 
-  if (!loaded) return null;
+  if (!loaded || !suppliersLoaded) return null;
 
   return (
     <div className="space-y-5">
@@ -117,10 +130,16 @@ export default function PurchasingPage() {
             </button>
           )}
         </div>
-        <Button onClick={() => setFormOpen(true)}>
-          <Plus size={16} />
-          Add Purchase
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button variant="secondary" onClick={() => setSupplierFormOpen(true)}>
+            <Plus size={16} />
+            Add supplier
+          </Button>
+          <Button onClick={() => setFormOpen(true)}>
+            <Plus size={16} />
+            Add Purchase
+          </Button>
+        </div>
       </div>
 
       <Table>
@@ -181,6 +200,14 @@ export default function PurchasingPage() {
         onClose={() => setFormOpen(false)}
         onSave={handleSave}
         products={products}
+        suppliers={suppliers}
+      />
+
+      <SupplierFormDialog
+        open={supplierFormOpen}
+        onClose={() => setSupplierFormOpen(false)}
+        onSave={handleSaveSupplier}
+        suppliers={suppliers}
       />
 
       <ConfirmDialog

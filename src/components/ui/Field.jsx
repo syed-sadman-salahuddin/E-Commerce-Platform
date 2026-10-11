@@ -5,16 +5,19 @@ const control =
 const okStyle = "border-slate-200 focus:border-indigo-500 focus:ring-indigo-500/15";
 const badStyle = "border-rose-400 focus:border-rose-500 focus:ring-rose-500/15";
 
-function Field({ label, htmlFor, error, required, children }) {
+function Field({ label, htmlFor, error, required, children, action }) {
   return (
     <div>
-      <label
-        htmlFor={htmlFor}
-        className="mb-1.5 block text-sm font-medium text-slate-700"
-      >
-        {label}
-        {required && <span className="ml-1 text-rose-500" aria-hidden="true">*</span>}
-      </label>
+      <div className="mb-1.5 flex items-center justify-between">
+        <label
+          htmlFor={htmlFor}
+          className="block text-sm font-medium text-slate-700"
+        >
+          {label}
+          {required && <span className="ml-1 text-rose-500" aria-hidden="true">*</span>}
+        </label>
+        {action}
+      </div>
       {children}
       {error && <p className="mt-1.5 text-xs text-rose-600">{error}</p>}
     </div>
@@ -28,11 +31,12 @@ export function Input({
   className,
   id,
   right,
+  action,
   ...props
 }) {
   const inputId = id ?? props.name;
   return (
-    <Field label={label} htmlFor={inputId} error={error} required={required}>
+    <Field label={label} htmlFor={inputId} error={error} required={required} action={action}>
       <div className="relative">
         <input
           id={inputId}
@@ -62,11 +66,12 @@ export function Select({
   className,
   id,
   children,
+  action,
   ...props
 }) {
   const selectId = id ?? props.name;
   return (
-    <Field label={label} htmlFor={selectId} error={error} required={required}>
+    <Field label={label} htmlFor={selectId} error={error} required={required} action={action}>
       <select
         id={selectId}
         required={required}
@@ -79,12 +84,13 @@ export function Select({
   );
 }
 
-export function Textarea({ label, error, className, id, ...props }) {
+export function Textarea({ label, error, required, className, id, action, ...props }) {
   const areaId = id ?? props.name;
   return (
-    <Field label={label} htmlFor={areaId} error={error}>
+    <Field label={label} htmlFor={areaId} error={error} required={required} action={action}>
       <textarea
         id={areaId}
+        required={required}
         rows={3}
         className={cn(control, error ? badStyle : okStyle, className)}
         {...props}

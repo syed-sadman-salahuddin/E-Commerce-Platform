@@ -2,14 +2,13 @@ import { useEffect, useState } from "react";
 import Modal from "@/components/ui/Modal";
 import Button from "@/components/ui/Button";
 import { Input, Select, Textarea } from "@/components/ui/Field";
-import { SUPPLIERS } from "@/lib/seed";
 import { formatCurrency } from "@/lib/utils";
 
 function todayInputValue() {
   return new Date().toISOString().slice(0, 10);
 }
 
-export default function PurchaseFormDialog({ open, onClose, onSave, products }) {
+export default function PurchaseFormDialog({ open, onClose, onSave, products, suppliers }) {
   const blank = {
     supplier: "",
     productId: "",
@@ -91,9 +90,9 @@ export default function PurchaseFormDialog({ open, onClose, onSave, products }) 
             onChange={(e) => setField("supplier", e.target.value)}
           >
             <option value="">Select a supplier</option>
-            {SUPPLIERS.map((s) => (
-              <option key={s} value={s}>
-                {s}
+            {suppliers.map((supplier) => (
+              <option key={supplier.id} value={supplier.name}>
+                {supplier.name}
               </option>
             ))}
           </Select>

@@ -25,7 +25,6 @@ export default function UserDashboard() {
 
   const orders = useMemo(() => normalizeOrders(storedOrders), [storedOrders]);
 
-  // Demo fallback for Michael Chen (user@gmail.com) if orders were not seeded
   useEffect(() => {
     if (ordersLoaded && user?.email === "user@gmail.com") {
       const hasUserOrders = storedOrders.some(

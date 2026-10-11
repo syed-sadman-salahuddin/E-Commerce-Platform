@@ -3,6 +3,7 @@ import { daysAgo } from "./utils";
 export const KEYS = {
   users: "sf_users",
   products: "sf_products",
+  suppliers: "sf_suppliers",
   purchases: "sf_purchases",
   orders: "sf_orders",
   refunds: "sf_refunds",
@@ -11,7 +12,12 @@ export const KEYS = {
 };
 
 export const CATEGORIES = ["Electronics", "Accessories", "Furniture", "Stationery"];
-export const SUPPLIERS = ["TechSource Ltd", "Global Traders", "Prime Wholesale", "OfficeHub Co"];
+export const seedSuppliers = [
+  { id: "SUP-001", name: "TechSource Ltd", address: "", products: "" },
+  { id: "SUP-002", name: "Global Traders", address: "", products: "" },
+  { id: "SUP-003", name: "Prime Wholesale", address: "", products: "" },
+  { id: "SUP-004", name: "OfficeHub Co", address: "", products: "" },
+];
 export const CUSTOMERS = [
   "Olivia Bennett", "Liam Carter", "Emma Wilson", "Noah Turner",
   "Ava Martinez", "Ethan Brooks", "Sophia Reed", "Mason Clark",
