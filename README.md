@@ -2,7 +2,7 @@
 
 A React-based inventory management dashboard for managing users, products, purchasing, orders, and refunds. The dashboard includes sales summaries and charts, and comes with sample data so you can explore the interface locally.
 
-> **Demo only:** This project currently uses browser storage for its sample accounts and application data. It does not include a production backend or secure authentication. Do not use real customer information, passwords, or business data.
+
 
 ## Features
 
@@ -34,9 +34,14 @@ The development server runs at [http://localhost:3000](http://localhost:3000).
 | Role | Email | Password |
 | --- | --- | --- |
 | Admin | `admin@gmail.com` | `admin123` |
+<<<<<<< HEAD
 | Admin | `sarah@stockflow.com` | `admin123` |
 | Viewer | `user@gmail.com` | `user123` |
 | Viewer | `viewer@gmail.com` | `viewer123` |
+=======
+| User | `user@gmail.com` | `user123` |
+
+>>>>>>> 09fe4b80055cf7ecab9872f0d91880a5cd82c41b
 
 These credentials are for local demonstration only. They are included in the client-side source and must not be treated as secure credentials.
 
@@ -55,3 +60,5 @@ These credentials are for local demonstration only. They are included in the cli
 - Recharts
 - Lucide React
 - Webpack
+- Babble
+
