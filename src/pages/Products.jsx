@@ -4,7 +4,13 @@ import { Plus, Search, Pencil, Trash2, ArrowUpDown } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { useDebounce } from "@/hooks/useDebounce";
 import { usePagination } from "@/hooks/usePagination";
-import { KEYS, seedProducts, CATEGORIES } from "@/lib/seed";
+import {
+  KEYS,
+  seedProducts,
+  seedPurchases,
+  seedSuppliers,
+  CATEGORIES,
+} from "@/lib/seed";
 import { cn, formatCurrency, generateId } from "@/lib/utils";
 import { Table, Th, Td, EmptyRow } from "@/components/ui/Table";
 import { StatusBadge } from "@/components/ui/Badge";
@@ -12,6 +18,8 @@ import Pagination from "@/components/ui/Pagination";
 import Button from "@/components/ui/Button";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import ProductFormDialog from "@/components/products/ProductFormDialog";
+import SupplierFormDialog from "@/components/purchasing/SupplierFormDialog";
+import { getProductImage } from "@/components/orders/productImages";
 import { useAuth } from "@/context/AuthContext";
 import { normalizeRole } from "@/lib/types";
 
@@ -21,6 +29,18 @@ export default function ProductsPage() {
   const [products, setProducts, loaded] = useLocalStorage(
     KEYS.products,
     seedProducts
+  );
+  const [categories, setCategories, categoriesLoaded] = useLocalStorage(
+    KEYS.categories,
+    CATEGORIES
+  );
+  const [suppliers, setSuppliers, suppliersLoaded] = useLocalStorage(
+    KEYS.suppliers,
+    seedSuppliers
+  );
+  const [, setPurchases, purchasesLoaded] = useLocalStorage(
+    KEYS.purchases,
+    seedPurchases
   );
 
   // One-time cleanup: remove an old "imageUrl" field if it exists in saved data.
@@ -44,6 +64,7 @@ export default function ProductsPage() {
   const [sort, setSort] = useState("none");
 
   const [formOpen, setFormOpen] = useState(false);
+  const [supplierFormOpen, setSupplierFormOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [deleteTarget, setDeleteTarget] = useState(null);
 
@@ -101,11 +122,49 @@ export default function ProductsPage() {
       );
       showToast("Product updated successfully.");
     } else {
-      const newProduct = { ...data, id: generateId("PRD") };
+      const newProduct = {
+        ...data,
+        id: generateId("PRD"),
+        status: "inactive",
+      };
       setProducts((prev) => [newProduct, ...prev]);
+      const supplier = suppliers.find((item) => item.id === data.supplierId);
+      setPurchases((prev) => [
+        {
+          id: generateId("PUR"),
+          supplier: supplier?.name ?? "",
+          productId: newProduct.id,
+          productName: newProduct.name,
+          quantity: newProduct.stock,
+          unitCost: newProduct.price,
+          totalCost: newProduct.price * newProduct.stock,
+          date: new Date().toISOString(),
+          status: "Ordered",
+          notes: "",
+        },
+        ...prev,
+      ]);
       showToast("Product added successfully.");
     }
     setFormOpen(false);
+  }
+
+  function handleAddCategory(categoryName) {
+    const existingCategory = categories.find(
+      (categoryNameInList) =>
+        categoryNameInList.toLowerCase() === categoryName.toLowerCase()
+    );
+    if (existingCategory) return existingCategory;
+
+    setCategories((previous) => [...previous, categoryName]);
+    return categoryName;
+  }
+
+  function handleSaveSupplier(data) {
+    const newSupplier = { ...data, id: generateId("SUP") };
+    setSuppliers((previous) => [...previous, newSupplier]);
+    showToast("Supplier added successfully.");
+    setSupplierFormOpen(false);
   }
 
   function handleDelete() {
@@ -115,7 +174,7 @@ export default function ProductsPage() {
     setDeleteTarget(null);
   }
 
-  if (!loaded) return null;
+  if (!loaded || !categoriesLoaded || !suppliersLoaded || !purchasesLoaded) return null;
 
   return (
     <div className="space-y-5">
@@ -145,7 +204,7 @@ export default function ProductsPage() {
             className="rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm outline-none focus:border-indigo-500 focus:ring-4 focus:ring-indigo-500/15"
           >
             <option value="All">All categories</option>
-            {CATEGORIES.map((c) => (
+            {categories.map((c) => (
               <option key={c} value={c}>
                 {c}
               </option>
@@ -164,16 +223,23 @@ export default function ProductsPage() {
           </select>
         </div>
         {isAdmin && (
-          <Button onClick={openAdd}>
-            <Plus size={16} />
-            Add Product
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="secondary" onClick={() => setSupplierFormOpen(true)}>
+              <Plus size={16} />
+              Add supplier
+            </Button>
+            <Button onClick={openAdd}>
+              <Plus size={16} />
+              Add Product
+            </Button>
+          </div>
         )}
       </div>
 
       <Table>
         <thead>
           <tr>
+            <Th>Image</Th>
             <Th>Product</Th>
             <Th>SKU</Th>
             <Th>Category</Th>
@@ -193,10 +259,21 @@ export default function ProductsPage() {
         </thead>
         <tbody className="divide-y divide-slate-100">
           {pageItems.length === 0 ? (
-            <EmptyRow colSpan={isAdmin ? 7 : 6} message="No products match your filters." />
+            <EmptyRow colSpan={isAdmin ? 8 : 7} message="No products match your filters." />
           ) : (
             pageItems.map((product) => (
               <tr key={product.id} className="transition hover:bg-slate-50/70">
+                <Td>
+                  {getProductImage(product) ? (
+                    <img
+                      src={getProductImage(product)}
+                      alt={product.name}
+                      className="h-12 w-12 rounded-lg border border-slate-200 bg-white object-contain p-1"
+                    />
+                  ) : (
+                    <span className="text-xs text-slate-400">No image</span>
+                  )}
+                </Td>
                 <Td className="font-medium text-slate-900">{product.name}</Td>
                 <Td className="font-mono text-xs text-slate-500">{product.sku}</Td>
                 <Td>{product.category}</Td>
@@ -259,6 +336,16 @@ export default function ProductsPage() {
             onClose={() => setFormOpen(false)}
             onSave={handleSave}
             initialData={editing}
+            categories={categories}
+            suppliers={suppliers}
+            onAddCategory={handleAddCategory}
+          />
+
+          <SupplierFormDialog
+            open={supplierFormOpen}
+            onClose={() => setSupplierFormOpen(false)}
+            onSave={handleSaveSupplier}
+            suppliers={suppliers}
           />
 
           <ConfirmDialog

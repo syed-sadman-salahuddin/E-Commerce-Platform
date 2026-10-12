@@ -27,6 +27,8 @@ export const PRODUCT_IMAGES = {
 export function getProductImage(product) {
   if (!product) return null;
 
+  if (product.image) return product.image;
+
   if (product.id && PRODUCT_IMAGES[product.id]) {
     return PRODUCT_IMAGES[product.id];
   }

@@ -1,5 +1,5 @@
 import { useMemo, useState } from "react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, Trash2, X } from "lucide-react";
 import { useLocalStorage } from "@/hooks/useLocalStorage";
 import { usePagination } from "@/hooks/usePagination";
 import { KEYS, seedPurchases, seedProducts, seedSuppliers } from "@/lib/seed";
@@ -10,7 +10,6 @@ import Pagination from "@/components/ui/Pagination";
 import Button from "@/components/ui/Button";
 import ConfirmDialog from "@/components/ui/ConfirmDialog";
 import PurchaseFormDialog from "@/components/purchasing/PurchaseFormDialog";
-import SupplierFormDialog from "@/components/purchasing/SupplierFormDialog";
 import { useToast } from "@/context/ToastContext";
 
 const STATUSES = ["All", "Pending", "Ordered", "Received", "Cancelled"];
@@ -21,8 +20,11 @@ export default function PurchasingPage() {
     seedPurchases
   );
   const { showToast } = useToast();
-  const [products] = useLocalStorage(KEYS.products, seedProducts);
-  const [suppliers, setSuppliers, suppliersLoaded] = useLocalStorage(
+  const [products, setProducts, productsLoaded] = useLocalStorage(
+    KEYS.products,
+    seedProducts
+  );
+  const [suppliers, , suppliersLoaded] = useLocalStorage(
     KEYS.suppliers,
     seedSuppliers
   );
@@ -32,8 +34,8 @@ export default function PurchasingPage() {
   const [dateTo, setDateTo] = useState("");
 
   const [formOpen, setFormOpen] = useState(false);
-  const [supplierFormOpen, setSupplierFormOpen] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState(null);
+  const [cancelTarget, setCancelTarget] = useState(null);
 
   const filtered = useMemo(() => {
     return purchases.filter((p) => {
@@ -57,18 +59,45 @@ export default function PurchasingPage() {
     setFormOpen(false);
   }
 
-  function handleSaveSupplier(data) {
-    const newSupplier = { ...data, id: generateId("SUP") };
-    setSuppliers((prev) => [...prev, newSupplier]);
-    showToast("Supplier added successfully.");
-    setSupplierFormOpen(false);
-  }
-
   function handleDelete() {
     if (!deleteTarget) return;
     setPurchases((prev) => prev.filter((p) => p.id !== deleteTarget.id));
     showToast(`Deleted purchase ${deleteTarget.id}.`, "error");
     setDeleteTarget(null);
+  }
+
+  function handleReceive(purchase) {
+    if (purchase.status !== "Ordered") return;
+    const product = products.find((item) => item.id === purchase.productId);
+    if (product) {
+      setProducts((previous) =>
+        previous.map((item) =>
+          item.id === product.id ? { ...item, status: "active" } : item
+        )
+      );
+    }
+    setPurchases((previous) =>
+      previous.map((item) =>
+        item.id === purchase.id && item.status === "Ordered"
+          ? { ...item, status: "Received" }
+          : item
+      )
+    );
+    showToast(`Purchase ${purchase.id} marked as received.`);
+  }
+
+  function handleCancelPurchase() {
+    if (!cancelTarget || cancelTarget.status !== "Ordered") return;
+    const { id } = cancelTarget;
+    setPurchases((previous) =>
+      previous.map((item) =>
+        item.id === id && item.status === "Ordered"
+          ? { ...item, status: "Cancelled" }
+          : item
+      )
+    );
+    showToast(`Purchase ${id} cancelled.`, "error");
+    setCancelTarget(null);
   }
 
   function clearFilters() {
@@ -78,7 +107,7 @@ export default function PurchasingPage() {
     setPage(1);
   }
 
-  if (!loaded || !suppliersLoaded) return null;
+  if (!loaded || !productsLoaded || !suppliersLoaded) return null;
 
   return (
     <div className="space-y-5">
@@ -131,10 +160,6 @@ export default function PurchasingPage() {
           )}
         </div>
         <div className="flex flex-wrap gap-2">
-          <Button variant="secondary" onClick={() => setSupplierFormOpen(true)}>
-            <Plus size={16} />
-            Add supplier
-          </Button>
           <Button onClick={() => setFormOpen(true)}>
             <Plus size={16} />
             Add Purchase
@@ -152,12 +177,13 @@ export default function PurchasingPage() {
             <Th>Cost</Th>
             <Th>Date</Th>
             <Th>Status</Th>
+            <Th>Action</Th>
             <Th className="text-right">Actions</Th>
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
           {pageItems.length === 0 ? (
-            <EmptyRow colSpan={8} message="No purchases match your filters." />
+            <EmptyRow colSpan={9} message="No purchases match your filters." />
           ) : (
             pageItems.map((purchase) => (
               <tr key={purchase.id} className="transition hover:bg-slate-50/70">
@@ -169,6 +195,28 @@ export default function PurchasingPage() {
                 <Td className="text-slate-500">{formatDate(purchase.date)}</Td>
                 <Td>
                   <StatusBadge status={purchase.status} />
+                </Td>
+                <Td>
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      disabled={purchase.status !== "Ordered"}
+                      onClick={() => handleReceive(purchase)}
+                      aria-label={`Mark purchase ${purchase.id} as received`}
+                    >
+                      Received
+                    </Button>
+                    <button
+                      type="button"
+                      disabled={purchase.status !== "Ordered"}
+                      onClick={() => setCancelTarget(purchase)}
+                      aria-label={`Cancel purchase ${purchase.id}`}
+                      title={`Cancel purchase ${purchase.id}`}
+                      className="rounded-lg p-2 text-slate-400 transition hover:bg-rose-50 hover:text-rose-600 focus:outline-none focus-visible:ring-4 focus-visible:ring-rose-500/30 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-transparent disabled:hover:text-slate-400"
+                    >
+                      <X size={16} />
+                    </button>
+                  </div>
                 </Td>
                 <Td>
                   <div className="flex justify-end">
@@ -203,19 +251,21 @@ export default function PurchasingPage() {
         suppliers={suppliers}
       />
 
-      <SupplierFormDialog
-        open={supplierFormOpen}
-        onClose={() => setSupplierFormOpen(false)}
-        onSave={handleSaveSupplier}
-        suppliers={suppliers}
-      />
-
       <ConfirmDialog
         open={deleteTarget !== null}
         onClose={() => setDeleteTarget(null)}
         onConfirm={handleDelete}
         title="Delete purchase?"
         message={`This will permanently remove purchase ${deleteTarget?.id ?? ""}. This action cannot be undone.`}
+      />
+
+      <ConfirmDialog
+        open={cancelTarget !== null}
+        onClose={() => setCancelTarget(null)}
+        onConfirm={handleCancelPurchase}
+        title="Cancel purchase?"
+        message={`Are you sure you want to cancel purchase ${cancelTarget?.id ?? ""}?`}
+        confirmLabel="Cancel purchase"
       />
     </div>
   );

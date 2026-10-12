@@ -3,6 +3,7 @@ import { daysAgo } from "./utils";
 export const KEYS = {
   users: "sf_users",
   products: "sf_products",
+  categories: "sf_categories",
   suppliers: "sf_suppliers",
   purchases: "sf_purchases",
   orders: "sf_orders",

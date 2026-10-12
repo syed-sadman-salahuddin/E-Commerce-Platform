@@ -54,7 +54,11 @@ export default function OrderDetailsDialog({ open, onClose, order }) {
           </p>
           <div className="divide-y divide-slate-100 rounded-xl border border-slate-200 bg-white">
             {order.items?.map((item, idx) => {
-              const img = getProductImage({ id: item.productId, name: item.name });
+              const img = getProductImage({
+                id: item.productId,
+                name: item.name,
+                image: item.image,
+              });
               const itemTotal = (item.price || 0) * (item.quantity || 1);
 
               return (
@@ -98,7 +102,6 @@ export default function OrderDetailsDialog({ open, onClose, order }) {
     </Modal>
   );
 }
-
 
 
 

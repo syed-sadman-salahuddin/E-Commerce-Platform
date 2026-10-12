@@ -73,6 +73,7 @@ export default function OrdersPage() {
   const filteredProducts = useMemo(() => {
     const q = catalogSearch.trim().toLowerCase();
     return products.filter((p) => {
+      if (p.status !== "active") return false;
       const matchesSearch =
         !q ||
         p.name.toLowerCase().includes(q) ||
@@ -158,6 +159,7 @@ export default function OrdersPage() {
       return {
         productId: product.id,
         name: product.name,
+        image: product.image,
         price: product.price,
         quantity: item.quantity,
       };
