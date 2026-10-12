@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import AppLayout from "@/layouts/AppLayout";
+import LandingPage from "@/pages/Landing";
 import LoginPage from "@/pages/Login";
 import DashboardPage from "@/pages/Dashboard";
 import UsersPage from "@/pages/Users";
@@ -11,7 +12,8 @@ import RefundsPage from "@/pages/Refunds";
 export default function App() {
   return (
     <Routes>
-      <Route path="/" element={<Navigate to="/login" replace />} />
+      <Route path="/" element={<Navigate to="/landing" replace />} />
+      <Route path="/landing" element={<LandingPage />} />
       <Route path="/login" element={<LoginPage />} />
 
       {/* Every route inside here is drawn inside AppLayout's <Outlet /> */}
@@ -24,8 +26,8 @@ export default function App() {
         <Route path="/refunds" element={<RefundsPage />} />
       </Route>
 
-      {/* Anything else goes to login */}
-      <Route path="*" element={<Navigate to="/login" replace />} />
+      {/* Anything else goes to landing */}
+      <Route path="*" element={<Navigate to="/landing" replace />} />
     </Routes>
   );
 }
