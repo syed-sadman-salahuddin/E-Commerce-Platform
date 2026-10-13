@@ -1,4 +1,4 @@
-# Inventory React
+# E-Commerce platform
 
 A React-based E-Commerce platform for managing users, products, purchasing, orders, and refunds. The dashboard includes sales summaries and charts, and comes with sample data so you can explore the interface locally.
 
