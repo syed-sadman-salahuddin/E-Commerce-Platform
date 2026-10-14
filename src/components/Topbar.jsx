@@ -19,7 +19,7 @@ export default function Topbar({ title, onMenuClick }) {
 
   function handleLogout() {
     logout();
-    navigate("/login");
+    navigate("/login", { replace: true });
   }
 
   const role = user?.role || "Viewer";
