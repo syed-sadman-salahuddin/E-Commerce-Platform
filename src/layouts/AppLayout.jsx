@@ -15,7 +15,7 @@ const titles = {
   "/refunds": "Refunds",
 };
 
-const adminOnlyPaths = new Set(["/users", "/purchasing", "/refunds"]);
+const adminOnlyPaths = new Set(["/users", "/products", "/purchasing", "/refunds"]);
 
 export default function AppLayout() {
   const { user, loading } = useAuth();

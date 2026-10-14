@@ -16,7 +16,7 @@ import { normalizeRole } from "@/lib/types";
 const links = [
   { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
   { href: "/users", label: "Users", icon: Users, adminOnly: true },
-  { href: "/products", label: "Products", icon: Package },
+  { href: "/products", label: "Products", icon: Package, adminOnly: true },
   { href: "/purchasing", label: "Purchasing", icon: ClipboardList, adminOnly: true },
   { href: "/orders", label: "Orders", icon: ShoppingCart },
   { href: "/refunds", label: "Refunds", icon: Undo2, adminOnly: true },
